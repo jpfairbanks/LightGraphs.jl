@@ -153,7 +153,8 @@ function induced_subgraph{T<:SimpleGraph}(g::T, iter)
     end
 
     for s in iter
-        for d in intersect(iter, out_neighbors(g, s))
+        intersection = intersect(iter, out_neighbors(g, s))
+        for d in intersection
             newe = Edge(newvid[s], newvid[d])
             if !has_edge(h, newe)
                 add_edge!(h, newe)
@@ -161,6 +162,30 @@ function induced_subgraph{T<:SimpleGraph}(g::T, iter)
         end
     end
     return h
+end
+function induced_subgraph_coo{T<:SimpleGraph}(g::T, iter)
+    n = length(iter)
+    #= isequal(n, length(unique(iter))) || error("Vertices in subgraph list must be unique") =#
+    #= isequal(n, nv(g)) && return copy(g) # if iter is not a proper subgraph =#
+    I,J = @compat Vector{Int}(), @compat Vector{Int}()
+    h = T(n)
+    newvid = Dict{Int, Int}()
+    println("numbering")
+    @time for (i,v) in enumerate(iter)
+        newvid[v] = i
+    end
+    verts = keys(newvid)
+    println("renumbering")
+    @time for s in iter
+        for d in out_neighbors(g,s)
+            if d in verts
+                push!(I, newvid[s])
+                push!(J, newvid[d])
+            end
+        end
+    end
+    return I, J
+    #sparse(I,J,fill(1,length(I)), n,n)
 end
 
 # dispatch for g[[1,2,3]], g[1:3], g[Set([1,2,3])]
