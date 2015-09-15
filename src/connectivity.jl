@@ -33,7 +33,8 @@ function connected_components!(visitor::TreeBFSVisitorVector, g::Graph)
     components = @compat Vector{Vector{Int}}()
     for v in 1:nvg
         if !found[v]
-            visitor.tree[:] = 0
+            fill!(visitor.tree, 0)
+            visitor.tree[v] = v
             parents = bfs_tree!(visitor, g, v)
             found_vertices = @compat Vector{Int}()
             for i in 1:nvg
@@ -52,16 +53,15 @@ end
 
 function connected_components!(label::Vector{Int}, g::Graph)
     nvg = nv(g)
-    visitor = LightGraphs.TreeBFSVisitorVector(zeros(Int, nv(g)))
+    visitor = LightGraphs.ComponentVisitorVector(label, 0)
+    colormap = zeros(Int,nvg)
+    que = @compat Vector{Int}()
+    sizehint!(que, nvg)
     for v in 1:nvg
         if label[v] == 0
-            visitor.tree[:] = 0
-            parents = bfs_tree!(visitor, g, v)
-            for i in 1:nvg
-                if parents[i] > 0
-                    label[i] = v
-                end
-            end
+            visitor.labels[v] = v
+            visitor.seed = v
+            traverse_graph(g, BreadthFirst(), v, visitor; colormap=colormap, que=que)
         end
     end
     return label
