@@ -170,13 +170,11 @@ function induced_subgraph_coo{T<:SimpleGraph}(g::T, iter)
     I,J = @compat Vector{Int}(), @compat Vector{Int}()
     h = T(n)
     newvid = Dict{Int, Int}()
-    println("numbering")
-    @time for (i,v) in enumerate(iter)
+    for (i,v) in enumerate(iter)
         newvid[v] = i
     end
     verts = keys(newvid)
-    println("renumbering")
-    @time for s in iter
+    for s in iter
         for d in out_neighbors(g,s)
             if d in verts
                 push!(I, newvid[s])
